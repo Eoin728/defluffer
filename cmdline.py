@@ -106,5 +106,3 @@ if __name__ == '__main__':
   import sys
   c = PageRemoverCli()
   sys.exit(c.cmdloop())
-
-  #add a close function for the pageremover class

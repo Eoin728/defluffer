@@ -1,0 +1,5 @@
+alias create q quit
+alias create save_changes s
+alias create set_file sf
+alias create num_pages np
+alias create delete del

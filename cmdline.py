@@ -17,7 +17,16 @@ class PageRemoverCli(cmd2.Cmd):
   save_parser.add_argument('fileName',help = 'Name of file to be saved')
 
   def __init__(self):
+
     cmd2.Cmd.__init__(self, startup_script='.cmd2rc', silence_startup_script=True)
+    self.hidden_commands.append('alias')
+    self.hidden_commands.append('macro')
+    self.hidden_commands.append('run_pyscript')
+    self.hidden_commands.append('run_script')
+    self.hidden_commands.append('shell')
+    self.hidden_commands.append('shortcuts')
+    del cmd2.Cmd.do_edit
+    del cmd2.Cmd.do_set
     self.page_remover = None
 
   def do_num_pages(self,line):

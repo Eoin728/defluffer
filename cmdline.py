@@ -20,43 +20,49 @@ class PageRemoverCli(cmd2.Cmd):
     cmd2.Cmd.__init__(self, startup_script='.cmd2rc', silence_startup_script=True)
     self.page_remover = None
 
-  def do_np(self,line):
+  def do_num_pages(self,line):
     """Displays number of pages of current file set.
-       Can type num_pages for same functionality
+       Can type np as shortcut for same functionality
     """
     if self.page_remover is None:
-      raise ValueError('set File Before deleting pages')
+      self.poutput('Set file before deleting pages')
+      return
     self.poutput(self.page_remover.get_page_num())
 
   @cmd2.with_argparser(del_parser)
-  def do_del(self,args):
+  def do_delete(self,args):
     """Deletes page as first and only argument.
        Can also delete a range by typing a-b
-       Can type delete for same functionality
+       Can type d as shortcut for same functionality
     """
     if self.page_remover is None:
-      raise ValueError('File not set')
+      self.poutput('Set file by typing sf or set_file before deleting pages')
+      return
 
     page_num1 = 0
     page_num2 = 0
     two_pages = False
 
     if args.page.count('-') > 1:
-      raise ValueError('Invalid argument')
+      self.poutput('invalid page numbers')
+      return
 
     if args.page.count('-') != 0:
       two_pages = True
       split_nums = args.page.split('-')
       for i in split_nums:
         if i.isdigit() is False:
-          raise ValueError('Type page numbers only')
+          self.poutput('invalid page numbers')
+          return
+
 
         page_num1 = int(split_nums[0])
         page_num2 = int(split_nums[1])
 
     else:
       if args.page.isdigit() is False:
-        raise ValueError('Type page numbers only')
+          self.poutput('invalid page numbers')
+          return
       page_num1 = int(args.page)
 
     def invalid_page(n):
@@ -66,37 +72,44 @@ class PageRemoverCli(cmd2.Cmd):
       if page_num1 > page_num2:
         page_num2,page_num1 = page_num1,page_num2
       if invalid_page(page_num1) or invalid_page(page_num2):
-        raise ValueError(
-          f'Cannot delete pages {page_num1}-{page_num2} from book with {self.page_remover.get_page_num()} pages')
+        self.poutput(f'Cannot delete pages {page_num1}-{page_num2} from book with {self.page_remover.get_page_num()} pages')
+        return
       for i in range(page_num2 - page_num1+1):
         self.page_remover.delete_page(page_num1)
     else:
       if invalid_page(page_num1) is True:
-        raise ValueError(
-          f'Cannot delete page {page_num1} from book with {self.page_remover.get_page_num()} pages')
+        self.poutput(f'Cannot delete page {page_num1} from book with {self.page_remover.get_page_num()} pages')
+        return
       self.page_remover.delete_page(page_num1)
 
 
   @cmd2.with_argparser(set_file_parser)
-  def do_sf(self,args):
+  def do_set_file(self,args):
     """Sets pdf specified as first and only argument as current file.
-       Can also type set_file for same functionality
+       Can also type sf as shortcut for same functionality
     """
-    self.page_remover = simplePageRemover(args.fileName)
+    try:
+        self.page_remover = simplePageRemover(args.fileName)
+    except FileNotFoundError as e:
+        self.poutput(e)
+        return
+
     self.file_set = True
 
 
   @cmd2.with_argparser(save_parser)
-  def do_s(self,args):
+  def do_save_changes(self,args):
     """Saves current pdf being edited to location specified as first and only argument.
-       Can also type save for same functionality
+       Can also type s as shortcut for same functionality
     """
     if self.page_remover is None:
-      raise ValueError('File not set')
+      self.poutput('File not set')
+      return
 
     name = args.fileName
     if name[0].isalpha() is False:
-      raise ValueError('invalid file name')
+      self.poutput('invalid file name')
+      return
     if len(name) < 4  or name[len(name) -4:] != '.pdf':
       name += '.pdf'
     self.page_remover.save_file(name)

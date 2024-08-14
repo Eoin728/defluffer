@@ -24,7 +24,8 @@ class PageRemover:
 
     #create temporary file for editing
     if len(file_name) < 5 or file_name[len(file_name) - 4:] != '.pdf':
-      raise ValueError(f'{file_name} is not a pdf')
+      raise FileNotFoundError(f'{file_name} is not a pdf')
+
     self.curr_file_loc = '/tmp/' + file_name[:len(file_name) - 4] + 'tmp.pdf'
     shutil.copyfile(file_name, self.curr_file_loc)
     self.f = open(self.curr_file_loc, 'r+b')
@@ -32,7 +33,7 @@ class PageRemover:
 
     #check for pdf header
     if self.pdf_header_check() is False:
-      raise TypeError('invalid pdf file')
+      raise FileNotFoundError('invalid pdf file')
 
     #get necessary pdf information
     self._build_xref_table()
@@ -94,6 +95,7 @@ class PageRemover:
     self.xref_table_size = self.fr.read_num()
     self.xref_table = [0] * self.xref_table_size
     index = 0
+
     for k in range(self.xref_table_size):
       offset = self.fr.read_num()
       gennum = self.fr.read_num()
@@ -128,8 +130,10 @@ class PageRemover:
     kid_loc = 0
     num = None
     num_pos = None
+
     while (s := self.fr.read_string()) != 'obj':
       pass
+
     while s != 'endobj':
       if s[1:] == 'Page':
         typ = 'Page'
@@ -170,12 +174,14 @@ class PageRemover:
     while self.fr.read_string() != str(child):
       pass
     self.f.seek(self.f.tell() - (len(str(child)) + 1))
+    #3 things are child location, generator number, and R
     for i in range(3):
       a = self.fr.read_string()
       self.f.seek(self.f.tell() - (len(str(a)) + 1))
       if a.find(']') != -1:
         a = a[:a.find(']')]
-      for k in range(len(str(a))):
+      # for _ in range(len(str(a))):
+      for _ in enumerate(str(a)):
         self.f.write((' ').encode('utf-8'))
 
   def _reduce_count(self,n):
